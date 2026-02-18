@@ -28,9 +28,7 @@ function App() {
                                     <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold tracking-tight">
                                         <span className="gradient-text">AI Project Manager</span>
                                     </h1>
-                                    <p className="text-gray-500 mt-0.5 text-xs md:text-sm">
-                                        Powered by Google Gemini AI
-                                    </p>
+                                    
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
