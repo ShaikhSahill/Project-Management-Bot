@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import ChatInterface from './components/ChatInterface';
 import ProjectList from './components/ProjectList';
 import TeamList from './components/TeamList';
