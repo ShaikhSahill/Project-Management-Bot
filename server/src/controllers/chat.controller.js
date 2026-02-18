@@ -136,6 +136,21 @@ function generateFallbackResponse(query, projects, teams) {
             return "No projects found. Try creating one using the form above!";
         }
         
+        // Check if asking about a SPECIFIC project
+        const matchedProject = projects.find(p => 
+            lowerQuery.includes(p.name.toLowerCase()) ||
+            lowerQuery.includes(p.name.replace('Project ', '').toLowerCase())
+        );
+        
+        if (matchedProject) {
+            // Return details for the SPECIFIC project
+            const progress = matchedProject.totalTasks > 0 
+                ? Math.round((matchedProject.completedTasks / matchedProject.totalTasks) * 100) 
+                : 0;
+            return `📊 **${matchedProject.name}** Status\n\n• Progress: ${progress}% (${matchedProject.completedTasks}/${matchedProject.totalTasks} tasks completed)\n• In Progress: ${matchedProject.inProgressTasks || 0} tasks\n• Pending: ${matchedProject.pendingTasks || 0} tasks\n• Status: ${matchedProject.status}\n• Deadline: ${matchedProject.deadline ? new Date(matchedProject.deadline).toLocaleDateString() : 'Not set'}\n• Team: ${matchedProject.assignedTeam || 'Not assigned'}`;
+        }
+        
+        // No specific project mentioned - list all
         const projectList = projects.map(p => {
             const progress = p.totalTasks > 0 ? Math.round((p.completedTasks / p.totalTasks) * 100) : 0;
             return `• **${p.name}** - ${p.status} (${progress}% complete, ${p.completedTasks}/${p.totalTasks} tasks)`;
@@ -148,6 +163,21 @@ function generateFallbackResponse(query, projects, teams) {
     if (lowerQuery.includes('team') || lowerQuery.includes('member') || lowerQuery.includes('who')) {
         if (teams.length === 0) {
             return "No teams found. Please run the seed script to add dummy data.";
+        }
+        
+        // Check if asking about a SPECIFIC team
+        const matchedTeam = teams.find(t => 
+            lowerQuery.includes(t.name.toLowerCase()) ||
+            lowerQuery.includes(t.displayName.toLowerCase())
+        );
+        
+        if (matchedTeam) {
+            // Return details for the SPECIFIC team
+            const members = matchedTeam.members || [];
+            const memberList = members.map(m => 
+                `  • ${m.name} (${m.role}) - ${m.currentWorkload || 0} tasks`
+            ).join('\n');
+            return `👥 **${matchedTeam.displayName}**\n\nMembers (${members.length}):\n${memberList}`;
         }
         
         const teamList = teams.map(t => {

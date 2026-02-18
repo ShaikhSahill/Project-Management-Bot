@@ -117,14 +117,18 @@ Your capabilities:
 4. Give insights about project health and potential issues
 5. Help with project planning and resource allocation
 
-Guidelines:
+CRITICAL GUIDELINES:
+- If the user asks about a SPECIFIC project (e.g., "progress of Project Alpha"), respond ONLY with information about that specific project. DO NOT list all projects.
+- If the user asks about a SPECIFIC team (e.g., "who is on the frontend team"), respond ONLY with information about that team. DO NOT list all teams.
+- Only list all projects/teams if the user explicitly asks for "all projects", "show all", "list projects", etc.
 - Be concise but informative
 - Use bullet points for clarity
 - Include relevant numbers and percentages
 - Highlight important issues or concerns
-- If asked about something not in the data, say so clearly
+- If the requested project/team is not found in the data, clearly say it doesn't exist
 - Use emojis sparingly for visual appeal
 - Format responses nicely with markdown
+- NEVER provide a generic response when the user asks a specific question
 
 """
         
@@ -149,40 +153,57 @@ Please provide a helpful, accurate response based on the data above:"""
         query_lower = query.lower()
         
         # Project status query
-        if any(word in query_lower for word in ["status", "progress", "how is"]):
+        if any(word in query_lower for word in ["status", "progress", "how is", "project"]):
+            # Check for specific project first
             for proj in projects:
-                if proj.get("name", "").lower() in query_lower:
+                project_name = proj.get("name", "").lower()
+                # Match full name or just the identifier (e.g., "alpha" in "Project Alpha")
+                short_name = project_name.replace("project ", "").strip()
+                if project_name in query_lower or short_name in query_lower:
                     total = proj.get("totalTasks", 0)
                     completed = proj.get("completedTasks", 0)
+                    in_progress = proj.get("inProgressTasks", 0)
+                    pending = proj.get("pendingTasks", 0)
                     progress = round((completed / total * 100), 1) if total > 0 else 0
+                    deadline = proj.get('deadline', 'Not set')
+                    if deadline and deadline != 'Not set':
+                        deadline = deadline.split('T')[0] if 'T' in str(deadline) else deadline
                     return f"""📊 **{proj.get('name')}** Status
-                    
-• Progress: {progress}% ({completed}/{total} tasks)
+
+• Progress: {progress}% ({completed}/{total} tasks completed)
+• In Progress: {in_progress} tasks
+• Pending: {pending} tasks
 • Status: {proj.get('status', 'unknown')}
-• Deadline: {proj.get('deadline', 'Not set')}"""
+• Deadline: {deadline}
+• Team: {proj.get('assignedTeam', 'Not assigned')}"""
             
-            # List all projects
-            if projects:
-                project_list = "\n".join([f"• {p.get('name')} - {p.get('status')} ({p.get('completedTasks', 0)}/{p.get('totalTasks', 0)} tasks)" for p in projects])
-                return f"📋 **All Projects:**\n{project_list}"
-            return "No projects found. Try creating one!"
+            # Only list all projects if asking generally (no specific project mentioned)
+            if any(word in query_lower for word in ["all", "list", "show", "projects"]):
+                if projects:
+                    project_list = "\n".join([f"• {p.get('name')} - {p.get('status')} ({p.get('completedTasks', 0)}/{p.get('totalTasks', 0)} tasks)" for p in projects])
+                    return f"📋 **All Projects:**\n{project_list}"
+            return "No projects found matching your query. Try 'Show all projects' to see available projects."
         
         # Team query
         if any(word in query_lower for word in ["team", "member", "who"]):
+            # Check for specific team first
             for team in teams:
-                if team.get("name", "").lower() in query_lower or team.get("displayName", "").lower() in query_lower:
+                team_name = team.get("name", "").lower()
+                display_name = team.get("displayName", "").lower()
+                if team_name in query_lower or display_name in query_lower:
                     members = team.get("members", [])
                     member_list = "\n".join([f"  • {m.get('name')} ({m.get('role')}) - {m.get('currentWorkload', 0)} tasks" for m in members])
                     return f"""👥 **{team.get('displayName', team.get('name'))}**
-                    
+
 Members ({len(members)}):
 {member_list}"""
             
-            # List all teams
-            if teams:
-                team_list = "\n".join([f"• {t.get('displayName', t.get('name'))} - {len(t.get('members', []))} members" for t in teams])
-                return f"👥 **All Teams:**\n{team_list}"
-            return "No teams found."
+            # Only list all teams if asking generally
+            if any(word in query_lower for word in ["all", "list", "show", "teams"]):
+                if teams:
+                    team_list = "\n".join([f"• {t.get('displayName', t.get('name'))} - {len(t.get('members', []))} members" for t in teams])
+                    return f"👥 **All Teams:**\n{team_list}"
+            return "No teams found matching your query. Try 'List all teams' to see available teams."
         
         return "I can help with project status, team info, and task management. Try 'Show all projects' or 'Who is on the frontend team?'"
 

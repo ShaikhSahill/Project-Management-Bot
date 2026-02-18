@@ -236,7 +236,34 @@ class NLPProcessor:
                 })
                 calculated_total += count
             
-            # If no explicit team assignments, try simpler patterns
+            # If no team matches with members, try simpler format: "N for teamname" (from form)
+            if not teams:
+                # Match patterns like: "5 for frontend", "3 for backend"
+                simple_team_matches = re.findall(
+                    r"(\d+)\s+(?:for|to)\s+(\w+)(?:\s+team)?",
+                    query,
+                    re.IGNORECASE
+                )
+                
+                for count_str, team_name in simple_team_matches:
+                    count = int(count_str)
+                    team_name_lower = team_name.lower()
+                    
+                    # Validate team exists
+                    if team_name_lower in TEAMS_DATA:
+                        # Auto-assign members based on workload
+                        team_members = get_members_with_lowest_workload(team_name_lower, count=3)
+                        member_names = [m["name"] for m in team_members]
+                        
+                        teams.append({
+                            "name": team_name_lower,
+                            "count": count,
+                            "members": member_names,
+                            "auto_assigned": True
+                        })
+                        calculated_total += count
+            
+            # If still no explicit team assignments, auto-distribute
             if not teams and total_tasks > 0:
                 # "Create 5 tasks for Project X" - auto-distribute
                 return self._auto_distribute_tasks(project_name, total_tasks)
