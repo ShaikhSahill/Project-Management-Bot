@@ -77,7 +77,7 @@ app.get('/api/seed', async (req, res) => {
       ]},
       { name: 'devops', displayName: 'DevOps Team', members: [
         { name: 'Ryan Garcia', email: 'ryan@company.com', role: 'lead', skills: ['AWS', 'Docker', 'Kubernetes', 'CI/CD'], currentWorkload: 5 },
-        { name: 'Amanda Hall', email: 'amanda@company.com', role: 'engineer', skills: ['Azure', 'Terraform', 'Jenkins'], currentWorkload: 3 },
+        { name: 'Amanda Hall', email: 'amanda@company.com', role: 'developer', skills: ['Azure', 'Terraform', 'Jenkins'], currentWorkload: 3 },
       ]},
     ];
 
